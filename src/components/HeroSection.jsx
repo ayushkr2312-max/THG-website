@@ -227,10 +227,10 @@ const Hero = ({ setActiveTab }) => {
             transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
             <h1 className="font-black italic tracking-normal leading-[0.85] select-none uppercase flex flex-col items-center">
-              <span className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl filter drop-shadow-[0_0_30px_rgba(250,204,21,0.3)] whitespace-nowrap relative shine-text-stroke" data-text="THE HEIST" style={{ fontFamily: "'Kwark', sans-serif", WebkitTextStroke: '2px #facc15', color: 'transparent', wordSpacing: '-0.5em' }}>
+              <span className="text-[3.36rem] sm:text-[3.99rem] md:text-[5.36rem] lg:text-[7.14rem] filter drop-shadow-[0_0_30px_rgba(250,204,21,0.3)] whitespace-nowrap relative shine-text-stroke" data-text="THE HEIST" style={{ fontFamily: "'Kwark', sans-serif", WebkitTextStroke: '2px #facc15', color: 'transparent', wordSpacing: '-0.5em' }}>
                 THE HEIST
               </span>
-              <span className="text-7xl sm:text-8xl md:text-9xl lg:text-[10rem] text-amber-400 mt-2 filter drop-shadow-[0_0_30px_rgba(245,158,11,0.2)] relative shine-text-fill" data-text="IS ON">
+              <span className="text-[3.99rem] sm:text-[5.36rem] md:text-[7.14rem] lg:text-[8.93rem] text-amber-400 mt-[0.63rem] filter drop-shadow-[0_0_30px_rgba(245,158,11,0.2)] relative shine-text-fill" data-text="IS ON">
                 IS{' '}
                 <motion.span
                   animate={{ opacity: [1, 0.7, 1] }}
