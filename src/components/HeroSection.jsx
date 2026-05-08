@@ -2,6 +2,10 @@ import React, { useRef, useState, useMemo } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Trophy, Crosshair, Hexagon, ArrowDown } from 'lucide-react';
 import { SectionReveal, FloatingParticles, useCounter, TiltCard } from './shared';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(useGSAP);
 
 // --- Animated Center Emblem (Holographic feel) ---
 const CenterEmblem = () => {
@@ -120,9 +124,47 @@ const ShatteredDebris = () => {
 
 // --- Centered Hero ---
 const Hero = ({ setActiveTab }) => {
+  const heroRef = useRef(null);
+
+  useGSAP(() => {
+    if (!heroRef.current) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    gsap.fromTo(
+      '.hero-underbar',
+      { scaleX: 0, autoAlpha: 0.4 },
+      {
+        scaleX: 1,
+        autoAlpha: 0.9,
+        duration: 0.9,
+        ease: 'power2.out',
+        stagger: 0.1,
+      }
+    );
+
+    gsap.to('.hero-underbar-dot', {
+      scale: 1.35,
+      autoAlpha: 1,
+      repeat: -1,
+      yoyo: true,
+      duration: 1.8,
+      ease: 'sine.inOut',
+    });
+
+    gsap.to('.hero-badge-core', {
+      scale: 1.25,
+      autoAlpha: 0.75,
+      repeat: -1,
+      yoyo: true,
+      duration: 1.7,
+      ease: 'sine.inOut',
+    });
+  }, { scope: heroRef });
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-zinc-950">
+    <div ref={heroRef} className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-zinc-950">
       {/* Perspective Grid Background */}
       <div className="absolute inset-[-10%] z-0 opacity-30">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#facc1515_1px,transparent_1px),linear-gradient(to_bottom,#facc1515_1px,transparent_1px)] bg-[size:64px_64px]" 
@@ -214,7 +256,7 @@ const Hero = ({ setActiveTab }) => {
           />
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500" />
+            <span className="hero-badge-core relative inline-flex rounded-full h-2 w-2 bg-yellow-500" />
           </span>
           <span className="text-yellow-400 font-bold tracking-[0.2em] text-[11px] uppercase">THE FINALS</span>
         </motion.div>
@@ -226,11 +268,11 @@ const Hero = ({ setActiveTab }) => {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <h1 className="font-black italic tracking-normal leading-[0.85] select-none uppercase flex flex-col items-center">
-              <span className="text-[3.36rem] sm:text-[3.99rem] md:text-[5.36rem] lg:text-[7.14rem] filter drop-shadow-[0_0_30px_rgba(250,204,21,0.3)] whitespace-nowrap relative shine-text-stroke" data-text="THE HEIST" style={{ fontFamily: "'Kwark', sans-serif", WebkitTextStroke: '2px #facc15', color: 'transparent', wordSpacing: '-0.5em' }}>
+            <h1 className="font-black italic tracking-[0.41em] leading-[0.85] select-none uppercase flex flex-col items-center" style={{ wordSpacing: '-5.38em' }}>
+              <span className="text-[4.5rem] sm:text-[6rem] md:text-[8rem] lg:text-[10rem] filter drop-shadow-[0_0_30px_rgba(250,204,21,0.3)] whitespace-nowrap relative shine-text-stroke" data-text="THE HEIST" style={{ fontFamily: "'Flipbash', sans-serif", WebkitTextStroke: '2px #facc15', color: 'transparent' }}>
                 THE HEIST
               </span>
-              <span className="text-[3.99rem] sm:text-[5.36rem] md:text-[7.14rem] lg:text-[8.93rem] text-amber-400 mt-[0.63rem] filter drop-shadow-[0_0_30px_rgba(245,158,11,0.2)] relative shine-text-fill" data-text="IS ON">
+              <span className="text-[3.43rem] sm:text-[5.15rem] md:text-[6.86rem] lg:text-[8.58rem] text-amber-400 mt-[1.26rem] filter drop-shadow-[0_0_30px_rgba(245,158,11,0.2)] relative shine-text-fill" data-text="IS ON">
                 IS{' '}
                 <motion.span
                   animate={{ opacity: [1, 0.7, 1] }}
@@ -241,6 +283,11 @@ const Hero = ({ setActiveTab }) => {
               </span>
             </h1>
           </motion.div>
+          <div className="mt-5 flex items-center justify-center gap-2">
+            <span className="hero-underbar origin-right h-[2px] w-16 md:w-20 bg-gradient-to-r from-transparent to-yellow-400/70" />
+            <span className="hero-underbar-dot h-1.5 w-1.5 rounded-full bg-yellow-400/80" />
+            <span className="hero-underbar origin-left h-[2px] w-16 md:w-20 bg-gradient-to-l from-transparent to-amber-400/70" />
+          </div>
         </div>
 
         {/* Description */}

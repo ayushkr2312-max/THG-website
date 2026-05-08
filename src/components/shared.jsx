@@ -1,5 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, useInView, useMotionValue, useTransform, useSpring } from 'framer-motion';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(useGSAP);
 
 // --- Animated Counter Hook ---
 export const useCounter = (end, duration = 2000, inView = false) => {
@@ -57,6 +61,74 @@ export const StaggerItem = ({ children, className = '' }) => (
   >{children}</motion.div>
 );
 
+// --- GSAP Split Text (subtle by default) ---
+export const GsapSplitText = ({
+  text,
+  as: Tag = 'span',
+  className = '',
+  charClassName = '',
+  delay = 0,
+  duration = 0.55,
+  stagger = 0.02,
+  y = 14,
+  triggerThreshold = 0.45,
+}) => {
+  const rootRef = useRef(null);
+  const chars = useMemo(() => Array.from(text || ''), [text]);
+
+  useGSAP(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const splitChars = root.querySelectorAll('[data-gsap-char]');
+    if (!splitChars.length) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      gsap.set(splitChars, { opacity: 1, y: 0 });
+      return;
+    }
+
+    gsap.set(splitChars, { opacity: 0, y });
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        gsap.to(splitChars, {
+          opacity: 1,
+          y: 0,
+          duration,
+          stagger,
+          delay,
+          ease: 'power2.out',
+          overwrite: 'auto',
+        });
+        observer.disconnect();
+      },
+      { threshold: triggerThreshold }
+    );
+
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, { scope: rootRef });
+
+  return (
+    <Tag ref={rootRef} className={className} aria-label={text}>
+      {chars.map((char, index) => (
+        <span
+          // eslint-disable-next-line react/no-array-index-key
+          key={`${char}-${index}`}
+          data-gsap-char
+          className={`inline-block will-change-transform ${charClassName}`}
+          style={char === ' ' ? { width: '0.345em' } : {}}
+        >
+          {char === ' ' ? '' : char}
+        </span>
+      ))}
+    </Tag>
+  );
+};
+
 // --- 3D Tilt Card ---
 export const TiltCard = ({ children, className = '' }) => {
   const ref = useRef(null);
@@ -82,24 +154,88 @@ export const TiltCard = ({ children, className = '' }) => {
 // --- Section Heading (diamond blue theme) ---
 export const SectionHeading = ({ preText, accentText, accentColor = 'text-yellow-400', subtitle }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const lineRef = useRef(null);
+  const subtitleRef = useRef(null);
+
+  useGSAP(() => {
+    if (!ref.current || !lineRef.current) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const runReveal = () => {
+      gsap.fromTo(
+        lineRef.current,
+        { scaleX: 0, transformOrigin: 'left center', autoAlpha: 1 },
+        {
+          scaleX: 1,
+          duration: prefersReducedMotion ? 0 : 0.7,
+          ease: 'power2.out',
+          overwrite: 'auto',
+        }
+      );
+
+      if (subtitleRef.current) {
+        gsap.fromTo(
+          subtitleRef.current,
+          { y: prefersReducedMotion ? 0 : 12, autoAlpha: prefersReducedMotion ? 1 : 0 },
+          {
+            y: 0,
+            autoAlpha: 1,
+            duration: prefersReducedMotion ? 0 : 0.65,
+            delay: prefersReducedMotion ? 0 : 0.18,
+            ease: 'power2.out',
+            overwrite: 'auto',
+          }
+        );
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0]?.isIntersecting) return;
+        runReveal();
+        observer.disconnect();
+      },
+      { threshold: 0.2 }
+    );
+
+    observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, { scope: ref });
+
   return (
     <div ref={ref} className="mb-16">
-      <motion.div initial={{ width: 0 }} animate={isInView ? { width: '4rem' } : {}}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="h-1 bg-gradient-to-r from-yellow-400 to-amber-500 mb-6"
+      <div
+        ref={lineRef}
+        className="h-1 w-16 bg-gradient-to-r from-yellow-400 to-amber-500 mb-6 origin-left"
       />
-      <motion.h2 initial={{ opacity: 0, x: -40 }} animate={isInView ? { opacity: 1, x: 0 } : {}}
-        transition={{ duration: 0.7, delay: 0.2 }}
-        className="text-5xl md:text-6xl font-black italic tracking-tighter text-white"
-      >
-        {preText} <span className={accentColor}>{accentText}</span>
-      </motion.h2>
+      <h2 className="text-5xl md:text-6xl font-black italic tracking-[0.085em] text-white">
+        <GsapSplitText
+          text={`${preText} `}
+          as="span"
+          className="inline"
+          delay={0.06}
+          duration={0.5}
+          stagger={0.018}
+          y={10}
+        />
+        <GsapSplitText
+          text={accentText}
+          as="span"
+          className={`inline ${accentColor}`}
+          delay={0.12}
+          duration={0.56}
+          stagger={0.02}
+          y={12}
+        />
+      </h2>
       {subtitle && (
-        <motion.p initial={{ opacity: 0, x: -20 }} animate={isInView ? { opacity: 1, x: 0 } : {}}
-          transition={{ duration: 0.6, delay: 0.4 }}
+        <p
+          ref={subtitleRef}
           className="text-zinc-400 font-medium text-lg md:text-xl mt-4 max-w-2xl"
-        >{subtitle}</motion.p>
+        >
+          {subtitle}
+        </p>
       )}
     </div>
   );
